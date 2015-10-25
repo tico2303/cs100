@@ -54,23 +54,28 @@ void extract_cmd(string first, char *list[])
     // the first arg will be the executable
     char *exec;
     exec = strtok(c, " ;");
-  	cout <<"exec: " << exec <<endl;
-
+    cout << "exec: " << exec <<endl;
+  	
+  	//if(strtok(NULL, " ")== " ")
     // the second arg will be the argument list
     char *arg_list;
-    arg_list = strtok(NULL," ;");
-
-    if(arg_list[0] == '-')
+    arg_list = strtok(NULL," ");
+    if(arg_list == NULL)
     {
-   		cout << "tack option" << endl;
+		cout << "arg is NULL" <<endl;
     }
+  	 cout << "arg list:" << arg_list << "*" <<endl;
+	
 
-	cout << "arg_list: " << arg_list <<endl;
 
     // the third arg will be the connection command
+
     //char *con_cmd;
-    //con_cmd = strtok(NULL, " || &&");
-    //cout << "con_cmd: " << con_cmd <<endl;
+    //con_cmd = strtok(NULL, "  |");
+
+
+
+    //cout << con_cmd <<endl;
  
 
     // packing the commands so that they can be passed to execvp() 
@@ -85,33 +90,39 @@ void extract_cmd(string first, char *list[])
 
 void execute(char *list[])
 {
-	cout << "execute(): pid=" << getpid() << endl;
 
+    int status;
+    cout << "pid in execute before fork: " << getpid() <<endl;
     pid_t pid = fork();
-
-	int status;
 
     if(pid <0)
     {
-		perror("fork failed"); 
+		cerr<<"fork failed" <<endl;
 		exit(0);
     }
-    else if(pid == 0)
+    if(pid == 0)
     {
-    	
-		cout << "execute(): execvp(" << list[0] << ") " <<endl;
-    	execvp(list[0], list);
-    	
+	    //this is the child fork	
+	    cout <<"pid in elif ( child ): "<< getpid() << endl;
+	    execvp(list[0], list);
+
+    	exit(0);	
     }
-    	cout << "execute(): parent wait() " <<endl;
-		//waits for parent process to finish
-    	wait(NULL);
-    	cout << "exiting parent" <<endl;
+
+
+    	cout << "parent" <<endl;
+    	cout << "pid outside elif: " << getpid() <<endl;
+		
+    	wait(NULL );
+    	cout << "parent ending" <<endl;
+
+    	//wait(  )
 }
 
 
 int main()
 {
+    
     //print process id
     cout << "getpid():";
     cout << getpid() <<endl;
@@ -119,36 +130,36 @@ int main()
 //through this in a while(1) loop with an exit condition
 	
 
-	while(1)
-	{
     string cmd; 
     char *li[100];
+	while( cmd !="quit" )
+	{
     	//prompt
     	cout <<"$ ";
     	
     	//get user input
-    	
     	getline(cin, cmd);
     	cout<<endl;
     	
-    	//get commands for user string stores it in char* li
-    	cout << "main: extract_cmd() " <<endl;
+    	//get commands for user string
     	extract_cmd(cmd,li);
 		
-		// check if exiting
-    	if( strcmp(li[0], "exit") ==0 )
+    	if(strcmp( li[0], "exit") ==0 )
     	{
     		cout <<" exiting" <<endl;
     		exit(0);
     	}
-
 		//creates fork and executes command
-		cout << "main: execute() " << endl;
     	execute(li);
 
-    	cout << "back from fork in main exiting" <<endl;
+    	cout << "back from fork in main" <<endl;
 	}
+	cout <<"quiting.." <<endl;
 	
     return 0;
+
+ 
+
+
 
 }
