@@ -39,22 +39,27 @@ int main()
 	}
 }
 
-void parse(string userline, char* list[])
+queue<char*> parse(string userline, char* list[])
 {
+	queue<char*> cmd_q;
+	
 	int size = arg_num(userline);
 	int i = 0;
 	char *c = new char[userline.length()+1];
 	char* j;
+	
 
 	strcpy(c, userline.c_str());
 	list[i] = strtok(c, " ");
 	j = list[i];
+	
+	
 
 	while(j)
 	{
 		i++;
+		cmd_q.push_back();
 		list[i] = strtok(NULL, " ");
-		cout << list[i] << endl;
 		j = list[i];
 	}
 
@@ -78,7 +83,4 @@ int arg_num(string userline)
 
 	return i;
 }
-
-
-
 
