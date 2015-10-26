@@ -1,11 +1,14 @@
 #ifndef And_hh
 #define And_hh
 
-class And
+#include "Connector.hh"
+
+class And :public Connector
 {
 
 public:
 	And();
+	void execute();
 	~And();
 
 private:

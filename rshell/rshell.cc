@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include <cstdlib>
 #include <string.h>
+#include <queue>
 
 using namespace std;
 
-void parse(string userline, char* list[]);
+queue<char* > parse(string userline, char* list[]);
 int arg_num(string userline);
 
 int main()
@@ -39,26 +40,29 @@ int main()
 	}
 }
 
-void parse(string userline, char* list[])
+queue<char*> parse(string userline, char* list[])
 {
 	int size = arg_num(userline);
 	int i = 0;
 	char *c = new char[userline.length()+1];
 	char* j;
+	queue<char* > cmd_q;
 
 	strcpy(c, userline.c_str());
-	list[i] = strtok(c, " ");
-	j = list[i];
+	cmd_q.push(strtok(c, " "));
+
+	j = cmd_q.back();
 
 	while(j)
 	{
 		i++;
-		list[i] = strtok(NULL, " ");
-		cout << list[i] << endl;
-		j = list[i];
+		cmd_q.push(strtok(NULL, " ") );
+		j = cmd_q.back();
+
 	}
 
-	list[i+1] = NULL;
+	cmd_q.push(NULL);
+	return cmd_q;
 }
 
 int arg_num(string userline)

@@ -1,9 +1,12 @@
 #ifndef Connector_hh
 #define Connector_hh
 
-// base class for the And, Or, ; , and : classes
+#include "Command.hh"
+#include <string>
 
-class Connector
+// base class for the And, Or, ; , and : classes
+`
+class Connector : public Command
 {
 
 public:
@@ -11,7 +14,7 @@ public:
 	~Connector();
 	void virtual execute(string cmd_str);
 
-	bool is_connector(char*);
+
 
 private:
 
