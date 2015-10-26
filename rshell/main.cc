@@ -1,5 +1,4 @@
 #include <iostream>
-//#include "Command.hh"
 #include <queue>
 #include <string>
 #include <unistd.h>
@@ -7,6 +6,11 @@
 #include <string.h>
 #include <vector>
 
+#include "Command.hh"
+#include "Connector.hh"
+#include "And.hh"
+#include "Or.hh"
+#include "SemiColon.hh"
 
 
 using namespace std;
@@ -35,12 +39,14 @@ int main()
 
 		if(temp == "&&" )
 		{
+			cout << "found &&" <<endl;
 			Command* And = new And(cmd_q);
 			execut_q.push(And);
 			empty_que(cmd_q);
 		}
 		else if(temp = "||")
 		{
+			cout << "found ||" <<endl;
 			Command* Or = new Or(cmd_q);
 			execut_q.push(Or);
 			empty_que(cmd_q);
@@ -48,12 +54,13 @@ int main()
 		}
 		else if(temp == ";")
 		{
+			cout << "found ;" <<endl;
 			Command* Sem  = new SemiColon(cmd_q);
 			execut_q.push(Sem);		
 			empty_que(cmd_q);
 		}
 	
-		
+		usrln_q.pop();	
 	}
 
 	cout << endl;
