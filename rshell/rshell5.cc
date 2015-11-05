@@ -5,9 +5,6 @@
 #include <cstdlib>
 #include <string.h>
 #include <queue>
-#include <list>
-#include <algorithm>
-#include <typeinfo>
 
 using namespace std;
 
@@ -17,90 +14,66 @@ queue<string> semiparse(string userline);
 int smallest(int a,int b,int c);
 void printq(queue<string> q);
 queue<string> parse_userline(string line);
-bool logic(queue<string>& q, bool previous);
 
 int main()
 {
 	string userline;
 	string command;
 	queue<string> q;
-	
-	start:
+	bool success = true;
 
 	while(1)
 	{
-		bool previous = true;
 		cout << "$" ;
-
-		//q = semiparse(userline);
 		getline(cin, userline);
-		q = parse_userline(userline);
 
-		while(!q.empty())
+		pid_t pid = fork();
+		if (pid < 0)
+			exit(1);
+		else if(pid == 0)
 		{
-			if(logic(q,previous))
+			q = parse_userline(userline);
+
+			if(q.front() == "quit")
+				exit(0);
+			while(!q.empty())
 			{
-				if(!q.empty())
+				//cout << "Starting Queue WHile. " << endl;
+				cout << endl;
+				command = q.front();
+				q.pop();
+				if(command == "&&")
+					command = q.front();
+				else if(command == "||")
 				{
 					command = q.front();
-					q.pop();
+					if(success)
+						break;
 				}
-				else
-				{
-					cout << "Expected additional arugment." << endl;
-					goto start;
-				}
+				else if(command == ";")
+					command = q.front();
+				//cout << "Above Fork process PID: " << getpid() << endl;
+				//cout << getpid() << endl;
 
 				int size = arg_num(userline);
 				char* args[size];
-				char quit[] = "quit";
 				
 				//parses on space
 				parse(command,args);
-
-				if(strcmp(quit,args[0]) == 0)
+				if(execvp(args[0],args) == -1)
 				{
-					cout << "QUITTING" << endl;
-					exit(0);
-				}
-
-				pid_t pid = fork();
-
-				if (pid < 0)
-					exit(1);
-				else if(pid == 0)
-				{
-					if(execvp(args[0],args) == -1)
-					{
-						cerr << "Invalid Command." << endl;
-						exit(0);
-					}
-				}
-				else
-				{
-					int wait_return = 0;
-					int status = 0;
-					int childret = 0;
-					cout << endl;
-
-					//Use to see if previous command success or fail. Returns a certain number if it fails.
-					wait_return = wait(&status);
-					childret = WEXITSTATUS(status);
-
-					if(childret != 0)
-						previous = false;
+					cerr << "Invalid Command." << endl;
+					success = false;
 				}
 			}
-			else
-			{
-				if(!q.empty())
-					q.pop();
-				else
-				{
-					cout << "Error, Not enough arguments." << endl;
-					goto start;
-				}
-			}
+		}
+		else
+		{
+			//cout << "I am the Parent Process waiting for child to end. Parent pid: " << getpid() << endl;
+			sleep(2);
+			wait(NULL);
+			cout << "Ending Parent Process:" << getpid() << endl;
+			cout << endl;
 		}
 	}
 }
@@ -113,6 +86,8 @@ queue<string> parse_userline(string line)
 	int x = 0;
 	while(line.length() > 0)
 	{
+		//cout << "Line is currently : " << endl;
+		//cout << line << endl;
 		int semi = 0;
 		int orr = 0;
 		int andd = 0;
@@ -122,110 +97,76 @@ queue<string> parse_userline(string line)
 		orr = line.find_first_of("||",0);
 		andd = line.find_first_of("&&",0);
 
+		/*
+		cout << "---------------------" << x << " SEARCH RESULTS -------------------- " << endl;
+		x++;
+		cout << endl;
+
+		cout << "semi: " << semi << endl;
+		cout << "orr:" << orr << endl;
+		cout << "andd: " << andd << endl;
+
+		cout << endl;
+		cout << endl;
+		*/
+
 		pos = smallest(semi,orr,andd);
+
+		/*
+		cout << "pos: " << pos << endl;
+
+		cout << endl;
+		cout << endl;
+		*/
 
 		if(pos == -1)
 		{
-			if(line.find_first_not_of(" ") == string::npos)
-				return q;
+			//cout << "No Connector found. " << endl;
 			q.push(line);
 			line = "";
 		}
 		else if(pos == semi)
 		{
-			string linecpy(line);
-			if(!strtok((char*)linecpy.c_str(), ";"))
-			{
-				cout << "Error. not enough arguments." << endl;
-				return q;
-			}
+			//cout << "Found semi at " << pos << endl;
 			s = strtok((char*)line.c_str(), ";");
 			q.push(s);
+			cout << s << endl;
 			q.push(";");
 			line.erase(0, pos+1);
 		}
 		else if(pos == orr)
 		{
-			string linecpy(line);
-			if(!strtok((char*)linecpy.c_str(), "|"))
-			{
-				cout << "Error. not enough arguments." << endl;
-				return q;
-			}
-			s = strtok((char*)line.c_str(), "|");
+			//cout << "Found or at " << pos << endl;
+			s = strtok((char*)line.c_str(), "||");
 			q.push(s);
 			q.push("||");
 			line.erase(0, pos+2);
 		}
 		else	
 		{
-			string linecpy(line);
-			if(!strtok((char*)linecpy.c_str(), "&"))
-			{
-				cout << "Error. not enough arguments." << endl;
-				return q;
-			}
-			s = strtok((char*)line.c_str(), "&");
+			//cout << "Found and at " << pos << endl;
+			s = strtok((char*)line.c_str(), "&&");
 			q.push(s);
 			q.push("&&");
 			line.erase(0, pos+2);
 		}
 	}
 
+	//printq(q);
+
 	return q;
-}
-
-bool logic(queue<string>& q, bool previous)
-{
-	string command;
-	if(!q.empty())
-		command = q.front();
-	else
-	{
-		cout << "Error, not enough arguments." << endl;
-		exit(0);
-	}
-
-	if(command == "&&")
-	{
-		q.pop();
-		if(previous == true)
-			return true; 
-		else
-			return false;
-	}
-
-	else if(command == "||")
-	{
-		q.pop();
-		if(previous == true) 
-		 	return false;
-		else
-		 	return true;
-	}
-	else if(command == ";")
-	{
-		q.pop();
-		return true;
-	}
-	else
-		return true;
 }
 
 int smallest(int a,int b,int c)
 {
-	list<int> v;
-	v.push_back(a);
-	v.push_back(b);
-	v.push_back(c);
-	v.remove(-1);
-
-	if(v.empty())
+	if((a == 0) and (b == 0) and (c == 0))
 		return -1;
-	else
-		v.sort();
-
-	return v.front();
+	else if((a < b) and (a < c) and (a > 0))
+		return a;
+	else if((b < a) and (b < c) and (b > 0))
+		return b;
+	else if(c > 0)
+		return c;
 }
 
 void parse(string userline, char* list[])
@@ -299,5 +240,7 @@ void printq(queue<string> q)
 		temp.pop();
 	}
 }
+
+
 
 
