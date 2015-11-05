@@ -5,8 +5,6 @@
 #include <cstdlib>
 #include <string.h>
 #include <queue>
-#include <list>
-#include <algorithm>
 
 using namespace std;
 
@@ -16,78 +14,66 @@ queue<string> semiparse(string userline);
 int smallest(int a,int b,int c);
 void printq(queue<string> q);
 queue<string> parse_userline(string line);
-bool logic(queue<string>& q, bool previous);
 
 int main()
 {
 	string userline;
 	string command;
 	queue<string> q;
+	bool success = true;
 
 	while(1)
 	{
-		bool previous = true;
 		cout << "$" ;
-
-		//q = semiparse(userline);
 		getline(cin, userline);
-		q = parse_userline(userline);
 
-		if(q.front() == "quit")
-			exit(0);
-		while(!q.empty())
+		pid_t pid = fork();
+		if (pid < 0)
+			exit(1);
+		else if(pid == 0)
 		{
-			if(logic(q,previous))
+			q = parse_userline(userline);
+
+			if(q.front() == "quit")
+				exit(0);
+			while(!q.empty())
 			{
-			//	cout << "queue after is: " << endl;
-			//	printq(q);
+				//cout << "Starting Queue WHile. " << endl;
+				cout << endl;
 				command = q.front();
 				q.pop();
-			//	cout << "The current command running is: " << command << endl;
-			//	cout << endl;
-
-				pid_t pid = fork();
-
-				if (pid < 0)
-					exit(1);
-				else if(pid == 0)
+				if(command == "&&")
+					command = q.front();
+				else if(command == "||")
 				{
-					//cout << "Child Process: ";
-					//cout << getpid() << endl;
-					int size = arg_num(userline);
-					char* args[size];
-					
-					//parses on space
-					parse(command,args);
-					if(execvp(args[0],args) == -1)
-					{
-						cerr << "Invalid Command." << endl;
-						exit(-7);
-					}
+					command = q.front();
+					if(success)
+						break;
 				}
-				else
+				else if(command == ";")
+					command = q.front();
+				//cout << "Above Fork process PID: " << getpid() << endl;
+				//cout << getpid() << endl;
+
+				int size = arg_num(userline);
+				char* args[size];
+				
+				//parses on space
+				parse(command,args);
+				if(execvp(args[0],args) == -1)
 				{
-					int wait_return = 0;
-					int status = 0;
-					int childret = 0;
-					cout << endl;
-					//cout << "I am the Parent Process waiting for child to end. Parent pid: " << getpid() << endl;
-
-					//Use to see if previous command success or fail. Returns a certain number if it fails.
-					wait_return = wait(&status);
-				//	cout << "The wait function returned: " << wait_return << endl;
-					childret = WEXITSTATUS(status);
-			//		cout << "The child function returned: " << childret << endl;
-
-					if(childret != 0)
-						previous = false;
-
-				//	cout << "Ending Parent Process:" << getpid() << endl;
-				//	cout << endl;
+					cerr << "Invalid Command." << endl;
+					success = false;
 				}
 			}
-			else
-				q.pop();
+		}
+		else
+		{
+			//cout << "I am the Parent Process waiting for child to end. Parent pid: " << getpid() << endl;
+			sleep(2);
+			wait(NULL);
+			cout << "Ending Parent Process:" << getpid() << endl;
+			cout << endl;
 		}
 	}
 }
@@ -100,8 +86,8 @@ queue<string> parse_userline(string line)
 	int x = 0;
 	while(line.length() > 0)
 	{
-	//	cout << "Line is currently : " << endl;
-	//	cout << line << endl;
+		//cout << "Line is currently : " << endl;
+		//cout << line << endl;
 		int semi = 0;
 		int orr = 0;
 		int andd = 0;
@@ -112,7 +98,6 @@ queue<string> parse_userline(string line)
 		andd = line.find_first_of("&&",0);
 
 		/*
-		
 		cout << "---------------------" << x << " SEARCH RESULTS -------------------- " << endl;
 		x++;
 		cout << endl;
@@ -123,18 +108,15 @@ queue<string> parse_userline(string line)
 
 		cout << endl;
 		cout << endl;
-		
-
 		*/
+
 		pos = smallest(semi,orr,andd);
 
-		
 		/*
 		cout << "pos: " << pos << endl;
 
 		cout << endl;
 		cout << endl;
-		
 		*/
 
 		if(pos == -1)
@@ -148,6 +130,7 @@ queue<string> parse_userline(string line)
 			//cout << "Found semi at " << pos << endl;
 			s = strtok((char*)line.c_str(), ";");
 			q.push(s);
+			cout << s << endl;
 			q.push(";");
 			line.erase(0, pos+1);
 		}
@@ -169,64 +152,21 @@ queue<string> parse_userline(string line)
 		}
 	}
 
-//	printq(q);
+	//printq(q);
 
 	return q;
 }
 
-bool logic(queue<string>& q, bool previous)
-{
-	string command;
-	command = q.front();
-	//cout << "Inside logic command is: " << command << endl;
-	//cout << "Inside logic previous is: " << previous << endl;
-	//cout << "queue before is: " << endl;
-	printq(q);
-
-	if(command == "&&")
-	{
-		q.pop();
-		if(previous == true)
-			return true; 
-		else
-			return false;
-	}
-
-	else if(command == "||")
-	{
-		q.pop();
-		if(previous == true) 
-		 	return false;
-		else
-		 	return true;
-	}
-	else if(command == ";")
-	{
-		q.pop();
-		return true;
-	}
-	else
-		return true;
-}
-
 int smallest(int a,int b,int c)
 {
-	list<int> v;
-	v.push_back(a);
-	v.push_back(b);
-	v.push_back(c);
-	v.remove(-1);
-
-	//cout << "List is: " << endl;
-	//for(list<int>::iterator i = v.begin(); i != v.end(); i++)
-	//		cout << *i;
-	
-	if(v.empty())
+	if((a == 0) and (b == 0) and (c == 0))
 		return -1;
-	else
-		v.sort();
-
-	return v.front();
+	else if((a < b) and (a < c) and (a > 0))
+		return a;
+	else if((b < a) and (b < c) and (b > 0))
+		return b;
+	else if(c > 0)
+		return c;
 }
 
 void parse(string userline, char* list[])
@@ -300,5 +240,7 @@ void printq(queue<string> q)
 		temp.pop();
 	}
 }
+
+
 
 
