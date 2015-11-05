@@ -11,13 +11,16 @@ class Command
 {
 
 public:
-	Command(string userline);
+	Command(string cmd_str);
 	virtual void execute( string cmd_str) = 0;
-	 
 	~Command();
 
+
 protected:
-	queue<char*> cmd_q;
+	string usrln;
+	queue<string> cmd_q;
+
+
 
 };
 #endif

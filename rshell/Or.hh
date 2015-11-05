@@ -10,11 +10,8 @@ class Or: public Connector
 {
 
 public:
-	Or();
-
+	Or(string cmd_str);
 	void execute(queue<char* > cmd_q); //calls c
-	bool get_success();
-	void set_success();
 
 	~Or();
 private:

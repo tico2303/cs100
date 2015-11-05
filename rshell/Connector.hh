@@ -4,24 +4,26 @@
 #include <string>
 #include <iostream>
 #include <queue>
+#include "Command.hh"
+
 
 using namespace std;
 
 // base class for the And, Or, ; , and : classes
 
-class Connector
+class Connector :public Command
 {
 
 	public:
-		Connector();
+		Connector( bool intial);
 		~Connector();
 
 		void virtual execute(string cmd_str);
 		void convert(queue<string> command_queue, char* args[]);
-		bool is_connector(char*);
+		//bool is_connector(char*);
 
 		bool get_success();
-		bool set_success(bool value);
+		void set_success(bool value);
 
 	private:
 		bool success;

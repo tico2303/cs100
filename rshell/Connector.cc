@@ -1,11 +1,10 @@
 #include "Connector.hh"
 
 
-Connector::Connector()
+Connector::Connector(string cmd_str) :Command(cmd_str)
 {
-	success = false;
+	
 }
-
 
 Connector::~Connector()
 {}
@@ -13,7 +12,7 @@ Connector::~Connector()
 
 void Connector::execute(string cmd_str)
 {
-
+	
 
 }
 
@@ -31,7 +30,14 @@ void Connector::convert(queue<string> command_queue, char* args[])
 	}
 	args[i] = NULL;
 }
-
+void Connector::get_success()
+{
+	return success;
+}
+void Connector::set_success(bool value)
+{
+	success = value;
+}
 
 
 
